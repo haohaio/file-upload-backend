@@ -1,12 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
+
 <body>
-  123
+  <input type="file" id="input">
+  <button id="btn">上传</button>
+
+  <script>
+    const chunkSize = 1024 * 20
+    let index = 0
+    btn.addEventListener('click', upload)
+
+
+    async function upload() {
+      const file = input.files[0]
+      const [filename, ext] = file.name.split('.')
+
+
+      const fileChunkList = createFileChunk(file)
+      const requestList = fileChunkList.map(({ chunk, index }) => {
+        const formData = new FormData()
+        formData.append('chunk', chunk)
+        formData.append('hash', `${file.name}_${index}`)
+        formData.append('filename', `${filename}_chunks`)
+        return fetch('/file/upload/chunk', {
+          method: 'post',
+          body: formData
+        })
+      })
+
+      console.log('requestList', requestList);
+      await Promise.all(requestList)
+
+      merge({
+        filename: file.name,
+        fileHash: `${filename}_chunks`
+      })
+    }
+
+    function createFileChunk(file, size = chunkSize) {
+      const fileChunkList = []
+      let index = 0
+      let start = index * size
+      while ((start = index * size) < file.size) {
+        fileChunkList.push({
+          chunk: file.slice(start, start + size),
+          index
+        });
+        index++
+      }
+      return fileChunkList
+    }
+
+    function merge({ filename, fileHash }) {
+      fetch('/file/merge', {
+        method: 'post',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ filename, fileHash, size: chunkSize })
+      }).then(res => res.json()).then((res) => {
+        console.log(res);
+      })
+    }
+
+  </script>
 </body>
+
 </html>

@@ -1,9 +1,11 @@
+const path = require('path')
+
 const Koa = require('koa')
-const Router = require('koa-router')
+const KoaBody = require('koa-body')
 const KoaStatic = require('koa-static')
 const cors = require('koa2-cors') //跨域处理
 
-const path = require('path')
+const router = require('./router/index')
 
 const app = new Koa()
 
@@ -18,9 +20,8 @@ app.use(
   })
 )
 
-app.use(KoaStatic(path.join(__dirname, '/public')))
-
-const router = new Router()
+app.use(KoaStatic(path.join(__dirname, '../public')))
+app.use(KoaBody())
 app.use(router.routes())
 
 app.listen(3000, () => {
