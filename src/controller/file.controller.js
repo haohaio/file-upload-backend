@@ -55,9 +55,7 @@ const pipeStream = (path, writeStream) => {
     const readStream = fse.createReadStream(path)
     readStream.on('end', () => {
       // 删除切片
-      console.log('unlinkSync', path)
       fse.unlinkSync(path)
-
       resolve()
     })
     readStream.pipe(writeStream)
@@ -69,7 +67,7 @@ async function mergeFileChunk(filePath, fileHash, size) {
   const chunkPaths = await fse.readdir(chunkDir)
 
   chunkPaths.sort((a, b) => a.split('_')[1] - b.split('_')[1])
-  console.log('chunkPaths', chunkPaths)
+
   await Promise.all(
     chunkPaths.map((chunkPath, index) => {
       return pipeStream(
@@ -82,7 +80,6 @@ async function mergeFileChunk(filePath, fileHash, size) {
     })
   )
 
-  console.log('rmdirSync', chunkDir)
   // 删除切片文件夹
   fse.rmdirSync(chunkDir) // 合并后删除保存切片的目录
 }
